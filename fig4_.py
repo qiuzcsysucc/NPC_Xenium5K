@@ -1,6 +1,6 @@
-#Fig.5a biorender
+#Fig.4a biorender
 
-#Fig.5b
+#Fig.4b
 fig, ax = plt.subplots(figsize=(6,5))
 
 sc.pl.umap(
@@ -16,29 +16,75 @@ plt.savefig("Fig5b.pdf")
 plt.close()
 
 
-#Fig.5c
-score_matrix = (
-    adata.obs
-    .groupby("tumor_spatial_subtype")[celltype]
-    .mean()
-)
+#Fig.4c
+small_marker_dict={
+ 'CD4T': ['CD4T_ISG_IFIT3',
+  'CD4T_Tanergy_EGR3',
+  'CD4T_Tfh_CXCL13',
+  'CD4T_Tn_GIMAP4',
+  'CD4T_eTreg_TNFRSF9',
+  'CD4T_proliferation_MKI67',
+  'CD4T_rTreg_CCR4'],
+ 'CD8T': ['CD8T_ISG_IFIT3',
+  'CD8T_Tem_GZMK',
+  'CD8T_Tex_HAVCR2',
+  'CD8T_Tgd_TRDC',
+  'CD8T_Tn_LEF1',
+  'CD8T_Tpex_EGR3',
+  'CD8T_Trm_ITGAE',
+  'CD8T_proliferation_MKI67'],
+ 'B/Plasma': ['B cells', 'Plasma cells'],
+ 'DC': ['DC_Langerhans_CD1A',
+  'DC_cDC1_CLEC9A',
+  'DC_cDC2_CLEC10A',
+  'DC_cDC3_LAMP3',
+  'DC_pDC_LILRA4'],
+ 'Mast':['Mast cells'],
+ 'TAM': ['TAM_CXCL9',
+  'TAM_FCGBP',
+  'TAM_FUCA1',
+  'TAM_LIPA',
+  'TAM_MKI67',
+  'TAM_MMP12',
+  'TAM_MX1',
+  'TAM_SLC40A1'],
+ 'NEU': ['NEU_ISG_IFIT3', 'NEU_NETs_IL1B'],
+ 'EC': ['EC_HEV-like_CXCL10',
+  'EC_ISG_IFIT1',
+  'EC_arterial_GJA5',
+  'EC_capillary_IVNS1ABP',
+  'EC_lymphatic_PROX1',
+  'EC_proliferation_MKI67',
+  'EC_tip-like_PGF',
+  'EC_venous-1_NOS3',
+  'EC_venous-3_CSF2RB'],
+ 'Pericyte': ['Pericyte_CAF-like_WNT5A',
+  'Pericyte_ECM_THBS1',
+  'Pericyte_FRC-like_CCL19',
+  'Pericyte_ISG_CXCL10',
+  'Pericyte_SMC-like_PLN',
+  'Pericyte_inflamed_STEAP4',
+  'Pericyte_proliferation_MKI67',
+  'Pericyte_senescence_MDM2',
+  'Pericyte_universal_RGS5'],
+ 'Fibro': ['Fibro_FDC_CXCL13',
+  'Fibro_FRC_CCL19',
+  'Fibro_NF_PI16',
+  'Fibro_iCAF-1_IL24',
+  'Fibro_iCAF-2_VEGFA',
+  'Fibro_iCAF-3_PAPPA',
+  'Fibro_ifnCAF_CXCL10',
+  'Fibro_myCAF-1_TGFB3',
+  'Fibro_myCAF-2_CST1',
+  'Fibro_myCAF-3_CCN2',
+  'Fibro_proliferation_MKI67',
+  'Fibro_senescence_MDM2']}
+sc.pl.matrixplot(adata,var_names=small_marker_dict,groupby='cell_type',standard_scale='var',cmap='coolwarm',colorbar_title='80μm neighbors\nscaled proportion',show=False,layer='raw')
+plt.savefig('Fig.4c.pdf', bbox_inches='tight')
+plt.show()
 
-score_matrix = score_matrix.reindex(ss_order)
 
-fig, ax = plt.subplots(figsize=(8,4))
-sns.heatmap(
-    score_matrix,
-    cmap="RdBu_r",
-    center=0,
-    ax=ax
-)
-
-plt.tight_layout()
-plt.savefig("Fig5c.pdf")
-plt.close()
-
-
-#Fig.5d, f, h, j, l
+#Fig.4d,f,h,j
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -285,7 +331,7 @@ def _recompute_from_per_slice(st, eps=1e-9):
     st["log2_sem"] = log2_sem
 
 
-#Fig.5e, g, i, k, m
+#Fig.4e, g, i, k
 import numpy as np
 import pandas as pd
 import ast
@@ -293,7 +339,46 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Rectangle
 from matplotlib.lines import Line2D
 from matplotlib.colors import to_rgba
+custom_color_mapping = {
+    # =========================
+    # 5 Tumor spatial subtypes
+    # =========================
+    'SS4_Hypoxic': '#e41a1c',
+    'SS1_Immunosuppressive': '#ff7f00',
+    'SS3_Interferon': '#a65628',
+    'SS2_Mesenchymal': '#999999',
 
+    # =========================
+    # Group 1: Immune-desert neighbors
+    # =========================
+    'NEU_NETs_IL1B': '#fdb462',
+    'TAM_MMP12': '#80b1d3',
+    'TAM_FCGBP': '#01665e',
+    'DC_Langerhans_CD1A': '#5e3c99',
+    'Fibro_iCAF-2_VEGFA': '#b35806',
+
+    # =========================
+    # Group 2: Immune-inflamed neighbors
+    # =========================
+    'CD8T_ISG_IFIT3': '#8da0cb',
+    'CD8T_Tex_HAVCR2': '#984ea3',
+    'CD8T_Trm_ITGAE': '#e6ab02',
+    'TAM_MX1': '#3B4CC0',     # changed: blue-indigo, distinct from TAM_CXCL9
+
+    # =========================
+    # Group 3: Immune-regulatory neighbors
+    # =========================
+    'CD4T_eTreg_TNFRSF9': '#e7298a',
+    'TAM_MKI67': '#08519c',
+
+    # =========================
+    # Group 4: Immune-excluded / fibroblast neighbors
+    # =========================
+    'Fibro_myCAF-1_TGFB3': '#7b3294',
+    'Fibro_myCAF-2_CST1': '#d01c8b',
+    'Fibro_proliferation_MKI67': '#8073ac',
+    'Pericyte_ECM_THBS1': '#543005',
+}
 def plot_cell_black_subset(
     adata,
     group=None,
@@ -611,43 +696,6 @@ def plot_cell_black_subset(
         plt.show()
 
 
-custom_color_mapping = {
-    'SS1-Tum': '#e41a1c',
-    'SS2-Tum': '#4daf4a',
-    'SS3-Tum': '#ff7f00',
-    'SS4-Tum': '#a65628',
-    'SS5-Tum': '#999999',
-
-    'NEU_NETs_IL1B': '#fdb462',
-    'TAM_MMP12': '#80b1d3',
-    'TAM_FCGBP': '#01665e',
-    'DC_Langerhans_CD1A': '#5e3c99',
-    'Fibro_iCAF-2_VEGFA': '#b35806',
-
-    'CD8T_ISG_IFIT3': '#8da0cb',
-    'CD8T_Tex_HAVCR2': '#984ea3',
-    'TAM_CXCL9': '#66c2a5',
-    'CD4T_Tn_GIMAP4': '#e6ab02',
-    'TAM_MX1': '#1b9e77',
-
-    'CD4T_eTreg_CCR8': '#e7298a',
-    'TAM_MKI67': '#08519c',
-    'CD4T_Tanergy_EGR3': '#a6761d',
-
-    'Fibro_myCAF-1_TGFB3': '#7b3294',
-    'Fibro_myCAF-2_CST1': '#d01c8b',
-    'Fibro_myCAF-3_CCN2': '#4d9221',
-    'Fibro_proliferation_MKI67': '#8073ac',
-    'Fibro_senescence_MDM2': '#543005',
-
-    'Pericyte_universal_RGS5': '#2166ac',
-    'Pericyte_ECM_THBS1': '#762a83',
-    'Pericyte_senescence_MDM2': '#bf812d',
-    'EC_capillary_IVNS1ABP': '#35978f',
-    'Pericyte_proliferation_MKI67': '#f781bf',
-}
-
-
 center_x = 8519
 center_y = 2239
 
@@ -692,13 +740,14 @@ plot_cell_black_subset(
     adata=adata_roi,
     group='cell_type',
     subset=[
-        'SS1-Tum',
-        'Fibro_myCAF-1_TGFB3',
-        'Fibro_myCAF-2_CST1',
-        'Fibro_myCAF-3_CCN2',
-        'Fibro_proliferation_MKI67',
-        'Fibro_senescence_MDM2'
-    ],
+    'SS2_Mesenchymal',
+    'Fibro_myCAF-1_TGFB3',
+    'Fibro_myCAF-2_CST1',
+    'Pericyte_ECM_THBS1',
+    'Fibro_proliferation_MKI67',
+    'Fibro_iCAF-2_VEGFA'
+
+],
     col_map=custom_color_mapping,
     boundary_col='boundary',
     cell_edge_width=1,
@@ -706,13 +755,14 @@ plot_cell_black_subset(
     show_scalebar=True,
     scale_length_um=100,
     figure_size=(4, 5),
-    title='SS1-Tum and top 5 co-occurring types\n(PTR_10)',
-    output='ss1_xe.pdf'
+    title='SS2_Mesenchymal\ntop 5 co-occurring subtypes (PTR_10)',
+    output='ss2_xe.pdf'
 )
 
 
 
-#Fig.5n
+#Fig.4l
+
 import pandas as pd
 import numpy as np
 import itertools
@@ -720,46 +770,51 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from scipy import stats
 from statannotations.Annotator import Annotator
-prop_df = (adata.obs
-           .groupby('batch')['cell_type']
-           .value_counts(normalize=True)
-           .rename("proportion")
-           .reset_index())
+
+prop_df = (
+    adata.obs
+    .groupby("batch")["cell_type"]
+    .value_counts(normalize=True)
+    .rename("proportion")
+    .reset_index()
+)
 
 conditions = [
-    prop_df['batch'].str.startswith('F'),
-    prop_df['batch'].str.startswith('P'),
-    prop_df['batch'].str.startswith('R'),
+    prop_df["batch"].str.startswith("F"),
+    prop_df["batch"].str.startswith("P"),
+    prop_df["batch"].str.startswith("R"),
 ]
-choices = ['PT_NR', 'PT_R', 'RT']
-prop_df['group'] = np.select(conditions, choices, default=np.nan)
-group_order = ['PT_NR', 'PT_R', 'RT']
+choices = ["PT_NR", "PT_R", "RT"]
+
+prop_df["group"] = np.select(conditions, choices, default="Other")
+group_order = ["PT_NR", "PT_R", "RT"]
 
 def make_pair_id(s):
     if isinstance(s, str) and len(s) >= 2:
-        return s[1:]      return np.nan
+        return s[1:]
+    return np.nan
 
 prop_df["pair_id"] = prop_df["batch"].apply(make_pair_id)
 
+dfp = prop_df.loc[
+    :, ["batch", "pair_id", "cell_type", "group", "proportion"]
+].copy()
 
-dfp = prop_df.loc[:, ["batch", "pair_id", "cell_type", "group", "proportion"]].copy()
 dfp = dfp.replace([np.inf, -np.inf], np.nan).dropna()
+dfp = dfp[dfp["group"].isin(group_order)].copy()
 
 x_order = [
-    "MP2_G2/M",
-    "MP3_Squamous",
-    "MP5_Immune-invasion",
-    "MP6_S-phase",
-    "MP7_RNA-splicing",
-    "MP8_IFN-response",
-    "MP9_Hypoxia",
-    "MP12_Progenitor",
-    "MP13_Senescence-like",
+    "SS1_Immunosuppressive",
+    "SS2_Mesenchymal",
+    "SS3_Interferon",
+    "SS4_Hypoxic",
 ]
+
 x_order = [x for x in x_order if x in set(dfp["cell_type"])]
 hue_order = [g for g in group_order if g in dfp["group"].unique().tolist()]
 
-plt.figure(figsize=(8, 6))
+plt.figure(figsize=(6, 4))
+
 ax = sns.boxplot(
     data=dfp,
     x="cell_type",
@@ -770,6 +825,7 @@ ax = sns.boxplot(
     palette=["#4ea64a", "#3777ac", "#d5231d"][:len(hue_order)],
     showfliers=False
 )
+
 plt.xticks(rotation=45, ha="right")
 plt.ylabel("Proportion")
 plt.xlabel("cell_type")
@@ -783,127 +839,160 @@ sns.stripplot(
     order=x_order,
     hue_order=hue_order,
     dodge=True,
-    jitter=False,                     alpha=0.7,
+    jitter=False,
+    alpha=0.7,
     size=4,
     linewidth=0.3,
     edgecolor="black",
     palette=["black"] * len(hue_order),
     ax=ax,
-    legend=False,                )
+    legend=False
+)
 
 pairs, labels, pvalues = [], [], []
 
 for ct in x_order:
     sub = dfp[dfp["cell_type"] == ct]
-    if set(['PT_NR', 'PT_R']).issubset(set(sub["group"].unique())):
-        x1 = sub.loc[sub["group"] == 'PT_NR', "proportion"].values
-        x2 = sub.loc[sub["group"] == 'PT_R',  "proportion"].values
-        if (len(x1) >= 1) and (len(x2) >= 1):
+
+    if {"PT_NR", "PT_R"}.issubset(set(sub["group"].unique())):
+        x1 = sub.loc[sub["group"] == "PT_NR", "proportion"].values
+        x2 = sub.loc[sub["group"] == "PT_R", "proportion"].values
+
+        if len(x1) >= 1 and len(x2) >= 1:
             try:
-                mw = stats.mannwhitneyu(x1, x2, alternative='two-sided', method='auto')
+                mw = stats.mannwhitneyu(
+                    x1, x2,
+                    alternative="two-sided",
+                    method="auto"
+                )
                 p_mw = float(mw.pvalue)
-                pairs.append(((ct, 'PT_NR'), (ct, 'PT_R')))
+
+                pairs.append(((ct, "PT_NR"), (ct, "PT_R")))
                 labels.append(f"{p_mw:.3f}")
                 pvalues.append(p_mw)
             except Exception:
                 pass
-    sub_pr = sub[sub["group"].isin(['PT_R', 'RT'])].dropna(subset=["pair_id"]).copy()
+
+    sub_pr = sub[
+        sub["group"].isin(["PT_R", "RT"])
+    ].dropna(subset=["pair_id"]).copy()
+
     if not sub_pr.empty:
-        piv = sub_pr.pivot_table(index="pair_id", columns="group",
-                                 values="proportion", aggfunc='mean')
-        piv = piv.dropna(subset=['PT_R', 'RT'], how='any')
-        if piv.shape[0] >= 1:
-            try:
-                w = stats.wilcoxon(piv['PT_R'].values, piv['RT'].values,
-                                   alternative='two-sided', zero_method='wilcox')
-                p_w = float(w.pvalue)
-                pairs.append(((ct, 'PT_R'), (ct, 'RT')))
-                labels.append(f"{p_w:.3f}")
-                pvalues.append(p_w)
-            except Exception:
-                pass
-annotator = Annotator(
-    ax,
-    pairs,
-    data=dfp,
-    x="cell_type",
-    y="proportion",
-    hue="group",
-    order=x_order,
-    hue_order=hue_order,
-)
-annotator.configure(
-    test=None,
-    show_test_name=False,
-    comparisons_correction=None,
-    loc="inside",
-    line_width=1.2
-)
-annotator.set_custom_annotations(labels)
-annotator.annotate()
+        piv = sub_pr.pivot_table(
+            index="pair_id",
+            columns="group",
+            values="proportion",
+            aggfunc="mean"
+        )
+
+        if {"PT_R", "RT"}.issubset(piv.columns):
+            piv = piv.dropna(subset=["PT_R", "RT"], how="any")
+
+            if piv.shape[0] >= 1:
+                try:
+                    w = stats.wilcoxon(
+                        piv["PT_R"].values,
+                        piv["RT"].values,
+                        alternative="two-sided",
+                        zero_method="wilcox"
+                    )
+                    p_w = float(w.pvalue)
+
+                    if np.isfinite(p_w):
+                        pairs.append(((ct, "PT_R"), (ct, "RT")))
+                        labels.append(f"{p_w:.3f}")
+                        pvalues.append(p_w)
+                except Exception:
+                    pass
+
+if pairs:
+    annotator = Annotator(
+        ax,
+        pairs,
+        data=dfp,
+        x="cell_type",
+        y="proportion",
+        hue="group",
+        order=x_order,
+        hue_order=hue_order
+    )
+
+    annotator.configure(
+        test=None,
+        show_test_name=False,
+        comparisons_correction=None,
+        loc="inside",
+        line_width=1.2
+    )
+
+    annotator.set_custom_annotations(labels)
+    annotator.annotate()
+
 def get_xpos(ct, grp, x_order, hue_order, width=0.8):
     i = x_order.index(ct)
     j = hue_order.index(grp)
     n = len(hue_order)
-    return i - width/2 + (j + 0.5) * width / n
+    return i - width / 2 + (j + 0.5) * width / n
 
 for ct in x_order:
     sub = dfp[dfp["cell_type"] == ct]
-    sub_pr = sub[sub["group"].isin(['PT_R', 'RT'])].dropna(subset=["pair_id"]).copy()
+
+    sub_pr = sub[
+        sub["group"].isin(["PT_R", "RT"])
+    ].dropna(subset=["pair_id"]).copy()
+
     if sub_pr.empty:
         continue
-    piv = sub_pr.pivot_table(index="pair_id", columns="group",
-                             values="proportion", aggfunc="mean")
-    piv = piv.dropna(subset=['PT_R', 'RT'], how='any')
+
+    piv = sub_pr.pivot_table(
+        index="pair_id",
+        columns="group",
+        values="proportion",
+        aggfunc="mean"
+    )
+
+    if not {"PT_R", "RT"}.issubset(piv.columns):
+        continue
+
+    piv = piv.dropna(subset=["PT_R", "RT"], how="any")
+
     if piv.shape[0] == 0:
         continue
 
-    x_pr = get_xpos(ct, 'PT_R', x_order, hue_order)
-    x_rt = get_xpos(ct, 'RT',   x_order, hue_order)
+    x_pr = get_xpos(ct, "PT_R", x_order, hue_order)
+    x_rt = get_xpos(ct, "RT", x_order, hue_order)
 
     for pid, row in piv.iterrows():
-        y1, y2 = float(row['PT_R']), float(row['RT'])
-        ax.plot([x_pr, x_rt], [y1, y2],
-                color="grey", linewidth=1.2, alpha=0.9, zorder=5)
-plt.xlabel('Metaprograms')
-plt.legend(title="Group", bbox_to_anchor=(1, 1), loc="upper right")
+        y1 = float(row["PT_R"])
+        y2 = float(row["RT"])
+
+        ax.plot(
+            [x_pr, x_rt],
+            [y1, y2],
+            color="grey",
+            linewidth=1.2,
+            alpha=0.9,
+            zorder=5
+        )
+
+plt.xlabel("Tumor spatial subtypes")
+plt.legend(title="Group", bbox_to_anchor=(1.05, 1), loc="upper left")
 plt.tight_layout()
-plt.savefig('Proportion_MPtumor_with_points_pairs.pdf', bbox_inches='tight')
-plt.show()
 
-#Fig.5o
-mp7 = pd.read_csv("MP7_ternary_fraction.csv")
-
-fig, axes = plt.subplots(
-    1,
-    4,
-    figsize=(12,3)
+plt.savefig(
+    "Proportion_tumor_with_points_pairs.pdf",
+    bbox_inches="tight"
 )
 
-for ax, radius in zip(
-    axes,
-    ["20μm","40μm","60μm","80μm"]
-):
-    sub = mp7[mp7["radius"] == radius]
+plt.show()
 
-    sns.boxplot(
-        data=sub,
-        x="group",
-        y="MP7_fraction",
-        ax=ax,
-        showfliers=False
-    )
-
-    sns.stripplot(
-        data=sub,
-        x="group",
-        y="MP7_fraction",
-        ax=ax,
-        size=3
-    )
-
-    ax.set_title(radius)
-
-plt.tight_layout()
-plt.savefig("Fig5o.pdf")
-plt.close()
+#Fig. 4m
+sc.pl.matrixplot(
+    adata=score,
+    var_names=score.var_names,
+    groupby="celltype",
+    dendrogram=True,
+    standard_scale="var",
+    colorbar_title="Scaled scores",
+    cmap="coolwarm",
+)
